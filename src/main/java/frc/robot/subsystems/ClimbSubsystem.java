@@ -1,0 +1,71 @@
+package frc.robot.subsystems;
+
+
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ClimbConstants;
+
+
+
+public class ClimbSubsystem extends SubsystemBase{
+    private  SparkMax m_Climb; 
+    private  SparkMaxConfig c_Climb = new SparkMaxConfig();
+    
+
+    
+
+    public ClimbSubsystem() {      
+        m_Climb = new SparkMax(ClimbConstants.kClimb, MotorType.kBrushless);
+        
+
+
+
+        c_Climb
+                .idleMode(IdleMode.kBrake)
+                .smartCurrentLimit(30)
+                .inverted(false);
+        c_Climb.softLimit
+            .forwardSoftLimit(50)
+            .forwardSoftLimitEnabled(false)
+            .reverseSoftLimit(0.0)
+            .reverseSoftLimitEnabled(false);
+                
+                
+        c_Climb.encoder
+                
+                .positionConversionFactor(1.0) // meters
+                .velocityConversionFactor(1.0);//meters/sec
+        
+        m_Climb.configure(c_Climb, ResetMode.kResetSafeParameters,
+                    PersistMode.kPersistParameters);
+        
+        
+    }
+    @Override
+    public void periodic() {
+
+    
+    }
+
+     public void stop() {
+        m_Climb.set(0.0);
+    }
+
+     public double getPosition() {
+        return 5.0;
+    }
+
+   
+
+     public void manualClimbMove(double move) {
+        m_Climb.set(move);
+    }
+
+    
+ }
+
