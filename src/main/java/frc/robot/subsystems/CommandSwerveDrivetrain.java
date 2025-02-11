@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -234,6 +235,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        SmartDashboard.putNumber("Left Front Angle", this.getModule(0).getCurrentState().angle.getDegrees());
+        SmartDashboard.putNumber("Right Front Angle", this.getModule(1).getCurrentState().angle.getDegrees());
+        SmartDashboard.putNumber("Left Rear Angle", this.getModule(2).getCurrentState().angle.getDegrees());
+        SmartDashboard.putNumber("Right Rear Angle", this.getModule(3).getCurrentState().angle.getDegrees());
+        SmartDashboard.putNumber("Gyro Yaw", this.getPigeon2().getYaw().getValueAsDouble());
+        SmartDashboard.putNumber("Heading State", this.getState().RawHeading.getDegrees());
     }
 
     private void startSimThread() {

@@ -63,7 +63,7 @@ public class ClimbSubsystem extends SubsystemBase{
     }
 
      public double getPosition() {
-        return 5.0;
+        return c_Encoder.getPosition();
     }
 
    

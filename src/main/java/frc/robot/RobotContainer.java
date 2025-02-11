@@ -10,7 +10,10 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.CorralIntake;
 import frc.robot.commands.CorralScoreL2;
+import frc.robot.commands.CorralScoreL3;
+import frc.robot.commands.CorralScoreL4;
 import frc.robot.commands.StowAll;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
@@ -23,11 +26,14 @@ import frc.robot.util.TunerConstants;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -39,6 +45,7 @@ public class RobotContainer {
 
    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private final Telemetry logger = new Telemetry(MaxSpeed);
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -60,6 +67,8 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController m_operatorController = 
+      new CommandXboxController(OperatorConstants.kOperatorControllerPort);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -80,15 +89,18 @@ public class RobotContainer {
    */
   private void configureBindings() {
 
-    // drivetrain.setDefaultCommand(
-    //         // Drivetrain will execute this command periodically
-    //         drivetrain.applyRequest(() ->
-    //             drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-    //                 .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-    //                 .withRotationalRate((joystick.getLeftTriggerAxis()-joystick.getRightTriggerAxis()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
-    //         )
-    //     );
 
+    //DEFAULT COMMANDS
+
+
+    drivetrain.setDefaultCommand(
+    //         // Drivetrain will execute this command periodically
+             drivetrain.applyRequest(() ->
+                 drive.withVelocityX(-m_driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                     .withVelocityY(-m_driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                     .withRotationalRate((m_driverController.getLeftTriggerAxis()-m_driverController.getRightTriggerAxis()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
+             )
+         );
 
     elevator.setDefaultCommand(
         new RunCommand(
@@ -97,33 +109,61 @@ public class RobotContainer {
 
     climb.setDefaultCommand(
       new RunCommand(
-        ()-> climb.manualClimbMove(-m_driverController.getRightY()), climb));
+        ()-> climb.manualClimbMove(0.0), climb));
 
     wrist.setDefaultCommand(
-            // The left stick controls translation of the robot.
-            // Turning is controlled by the X axis of the right stick.
-            //new RunCommand(
-            //    () -> wrist.manualWristMove(-m_driverController.getRightY()*.25), wrist));
-                
             new RunCommand(() -> wrist.closedLoopWrist(), wrist));
-    
     
     coral.setDefaultCommand(new RunCommand(() -> coral.intakeStop(), coral));
     algae.setDefaultCommand(new RunCommand(() -> algae.intakeStop(), algae));
     leds.setDefaultCommand(new RunCommand(() -> leds.rainbow(), leds));
 
 
-    m_driverController.b().whileTrue(new RunCommand(() -> coral.intake(), coral));
-    m_driverController.a().whileTrue(new RunCommand(() -> coral.outtake(), coral));
 
-    m_driverController.y().whileTrue(new RunCommand(()-> algae.intake(), algae));
-    m_driverController.x().whileTrue(new RunCommand(()-> algae.outtake(), algae));
+    //************  DRIVER CONTROLLER  ****************
 
-    m_driverController.rightBumper().onTrue(new InstantCommand(() ->elevator.setElevatorCoralL2(), elevator));
-    m_driverController.leftBumper().onTrue(new InstantCommand(() ->elevator.setElevatorCoralL1(), elevator));
+    m_driverController.leftBumper().whileTrue(
+        new RunCommand(
+            () -> climb.manualClimbMove(-MathUtil.applyDeadband(m_driverController.getRightY(), OperatorConstants.kDriveDeadband)),
+            climb));
+    
 
-    m_driverController.back().onTrue(new StowAll(wrist, elevator));
-    m_driverController.start().onFalse(new CorralScoreL2(wrist, elevator));
+    m_driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
+    
+    //PROBABLY REMOVE THIS ONE
+    m_driverController.b().whileTrue(drivetrain.applyRequest(() ->
+            point.withModuleDirection(new Rotation2d(-m_driverController.getLeftY(), -m_driverController.getLeftX()))
+    ));
+
+    // Run SysId routines when holding back/start and X/Y.
+    // Note that each routine should be run exactly once in a single log.
+    m_driverController.back().and(m_driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+    m_driverController.back().and(m_driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+    m_driverController.start().and(m_driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+    m_driverController.start().and(m_driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+
+    // reset the field-centric heading on start press
+    m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+    drivetrain.registerTelemetry(logger::telemeterize);
+
+    //************   OPERATOR CONTROLLER  *******************
+
+    m_operatorController.povDown().onTrue(new CorralIntake(wrist, elevator));  //Intake/Stow
+    
+    m_operatorController.povLeft().onTrue(new CorralScoreL2(wrist, elevator));
+
+    m_operatorController.povUp().onTrue(new CorralScoreL3(wrist, elevator));
+
+    m_operatorController.povRight().onTrue(new CorralScoreL4(wrist, elevator));
+
+    m_operatorController.leftBumper().whileTrue(new RunCommand(() -> coral.intake(), coral));
+
+    m_operatorController.rightBumper().whileTrue(new RunCommand(() -> coral.outtake(), coral));
+
+    m_operatorController.a().whileTrue(new RunCommand(()-> algae.intake(), algae));
+    
+    m_operatorController.x().whileTrue(new RunCommand(()-> algae.outtake(), algae));
 
   }
 

@@ -12,17 +12,16 @@ import frc.robot.util.Position;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class CorralIntake extends ParallelCommandGroup {
-  /** Creates a new CorralScoreL2. */
+public class CorralScoreL3 extends ParallelCommandGroup {
 
-  public CorralIntake(    
-    WristSubsystem wrist,
-    ElevatorSubsystem elevator) {
+  public CorralScoreL3(
+      WristSubsystem wrist,
+      ElevatorSubsystem elevator) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new ElevatorCmd(Position.CORAL_INTAKE, elevator),
-      new WristCmd(Position.CORAL_INTAKE, wrist)
+      new ElevatorCmd(Position.CORAL_L3, elevator),
+      new WristCmd(Position.CORAL_L3, wrist)
     );
   }
 }
