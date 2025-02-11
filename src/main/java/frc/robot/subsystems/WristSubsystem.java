@@ -150,54 +150,40 @@ public class WristSubsystem extends SubsystemBase{
       }
 
 
-    public void lowWrist(){
-        setWristSetpoint(0.8);
-    }
-
-
-    public void midWrist(){
-        setWristSetpoint(0.75);
-    }
-
-    public void upWrist(){
-        setWristSetpoint(0.9);
-    }
-
-
     public void setWristStow(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.88);
       }
     
       public void setWristCoralIntake(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.88);
       }
     
       public void setWristCoralL1Dump(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.69);
       }
     
       public void setWristCoralL1(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.69);
       }
     
       public void setWristCoralL2(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.79); // other option .72
       }
     
       public void setWristCoralL3(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.73);
       }
     
       public void setWristCoralL4(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.69);
       }
     
       public void setWristAlgaeL2(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.75);
       }
     
       public void setWristAlgaeL3(){
-        setWristSetpoint(0.8);
+        setWristSetpoint(0.74);
       }
 
 

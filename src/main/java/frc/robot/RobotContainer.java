@@ -13,6 +13,7 @@ import frc.robot.subsystems.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.IntakeCoralSubsystem;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.WristSubsystem;
+import frc.robot.subsystems.
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -33,6 +34,7 @@ public class RobotContainer {
   private final Leds leds = new Leds();
   private final ElevatorSubsystem elevator = new ElevatorSubsystem();
   private final ClimbSubsystem climb = new ClimbSubsystem();
+  private final CommandSwerveDriveTrain drivetrain = new Command
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -56,6 +58,15 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+
+    .setDefaultCommand(
+            // Drivetrain will execute this command periodically
+            drivetrain.applyRequest(() ->
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate((joystick.getLeftTriggerAxis()-joystick.getRightTriggerAxis()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            )
+        );
 
 
     elevator.setDefaultCommand(
