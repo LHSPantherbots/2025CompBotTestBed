@@ -6,7 +6,11 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkMax;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
 
@@ -15,6 +19,8 @@ import frc.robot.Constants.ClimbConstants;
 public class ClimbSubsystem extends SubsystemBase{
     private  SparkMax m_Climb; 
     private  SparkMaxConfig c_Climb = new SparkMaxConfig();
+    //private RelativeEncoderConfig 
+    private RelativeEncoder c_Encoder = m_Climb.getEncoder();
     
 
     
@@ -48,7 +54,7 @@ public class ClimbSubsystem extends SubsystemBase{
     }
     @Override
     public void periodic() {
-
+        SmartDashboard.putNumber("Climber Position", c_Encoder.getPosition());
     
     }
 

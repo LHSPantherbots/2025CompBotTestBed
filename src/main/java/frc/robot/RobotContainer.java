@@ -4,6 +4,11 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.CorralScoreL2;
 import frc.robot.commands.StowAll;
@@ -13,7 +18,11 @@ import frc.robot.subsystems.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.IntakeCoralSubsystem;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.WristSubsystem;
-import frc.robot.subsystems.
+import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.util.TunerConstants;
+
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -27,6 +36,18 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+
+   private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+    /* Setting up bindings for necessary control of the swerve drive platform */
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+
+    //private final Telemetry logger = new Telemetry(MaxSpeed);
   // The robot's subsystems and commands are defined here...
   private final WristSubsystem wrist = new WristSubsystem();
   private final IntakeCoralSubsystem coral = new IntakeCoralSubsystem();
@@ -34,7 +55,7 @@ public class RobotContainer {
   private final Leds leds = new Leds();
   private final ElevatorSubsystem elevator = new ElevatorSubsystem();
   private final ClimbSubsystem climb = new ClimbSubsystem();
-  private final CommandSwerveDriveTrain drivetrain = new Command
+  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -59,14 +80,14 @@ public class RobotContainer {
    */
   private void configureBindings() {
 
-    .setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate((joystick.getLeftTriggerAxis()-joystick.getRightTriggerAxis()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
-        );
+    // drivetrain.setDefaultCommand(
+    //         // Drivetrain will execute this command periodically
+    //         drivetrain.applyRequest(() ->
+    //             drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+    //                 .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+    //                 .withRotationalRate((joystick.getLeftTriggerAxis()-joystick.getRightTriggerAxis()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
+    //         )
+    //     );
 
 
     elevator.setDefaultCommand(
@@ -97,13 +118,6 @@ public class RobotContainer {
 
     m_driverController.y().whileTrue(new RunCommand(()-> algae.intake(), algae));
     m_driverController.x().whileTrue(new RunCommand(()-> algae.outtake(), algae));
-
-
-    m_driverController.pov(180).onTrue(new InstantCommand(() -> wrist.lowWrist(), wrist));
-    m_driverController.pov(90).onTrue(new InstantCommand(() -> wrist.midWrist(), wrist));
-
-
-    m_driverController.pov(0).onTrue(new InstantCommand(() -> wrist.upWrist(), wrist));
 
     m_driverController.rightBumper().onTrue(new InstantCommand(() ->elevator.setElevatorCoralL2(), elevator));
     m_driverController.leftBumper().onTrue(new InstantCommand(() ->elevator.setElevatorCoralL1(), elevator));
